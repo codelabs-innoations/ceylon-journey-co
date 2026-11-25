@@ -1,11 +1,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ceylon-journey-co",
-  "compatibility_date": "2026-11-23",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-25",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "not_found_handling": "single-page-application"
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "MAIL_FROM": "ceylonjourney@gmail.com",
+    "MAIL_TO": "dashezlevin@gmail.com"
   }
 }
