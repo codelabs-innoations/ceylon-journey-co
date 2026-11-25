@@ -154,7 +154,13 @@ button:focus-visible {
   position: relative;
   padding-top: 120px;
   padding-bottom: 30px;
-  background: var(--black);
+  /* photo and overlay fade to transparent over the last 320px */
+  --fade: linear-gradient(
+    180deg,
+    #000 0,
+    #000 calc(100% - 320px),
+    transparent 100%
+  );
 }
 
 .hero-slides {
@@ -162,11 +168,14 @@ button:focus-visible {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  -webkit-mask-image: var(--fade);
+  mask-image: var(--fade);
 }
 
 .hero-slide {
   position: absolute;
   inset: 0;
+  background-image: var(--img);
   background-size: cover;
   background-position: center 46%;
   opacity: 0;
@@ -186,14 +195,14 @@ button:focus-visible {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.82) 0%,
-      rgba(0, 0, 0, 0.47) 52%,
-      rgba(0, 0, 0, 0.25) 100%
-    ),
-    linear-gradient(0deg, #080808 0%, transparent 25%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.47) 52%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  -webkit-mask-image: var(--fade);
+  mask-image: var(--fade);
 }
 
 .hero-inner {
@@ -1052,6 +1061,15 @@ footer {
   color: var(--gold);
 }
 
+.service-card {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.service-card:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
 /* ---------- tablet ---------- */
 @media (max-width: 900px) {
   .wrap {
@@ -1136,7 +1154,11 @@ footer {
 @media (max-width: 560px) {
   .hero {
     padding-top: 100px;
-    --img-h: 770px;
+    --img-h: 750px;
+  }
+
+  .quote-bar {
+    margin-top: 10px;
   }
 
   .hero-inner {
@@ -1147,19 +1169,41 @@ footer {
   .hero-slides {
     bottom: auto;
     height: var(--img-h);
-    -webkit-mask-image: linear-gradient(180deg, transparent 28%, #000 52%);
-    mask-image: linear-gradient(180deg, transparent 28%, #000 52%);
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .hero-slide {
+    inset: auto 0 0 0;
+    height: 560px;
     background-repeat: no-repeat;
-    background-size: auto 540px;
-    background-position: var(--pos-m, 100% bottom);
+    background-size: cover;
+    background-image: var(
+      --img-m,
+      var(--img)
+    );
+    background-position: var(--pos-m, center top);
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      #000 35%,
+      #000 78%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      #000 35%,
+      #000 78%,
+      transparent 100%
+    );
   }
 
   .hero-overlay {
     bottom: auto;
     height: var(--img-h);
+    -webkit-mask-image: none;
+    mask-image: none;
     background: linear-gradient(
       180deg,
       rgba(8, 8, 8, 0.55) 0%,
@@ -1187,39 +1231,81 @@ footer {
     grid-template-columns: 1fr;
   }
 
+  /* ----- service tiles: one row, tap to expand ----- */
   .services {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    display: flex;
+    gap: 8px;
     margin-top: 22px;
   }
 
   .service-card {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 112px;
     min-height: 0;
-    padding: 14px 16px;
-    flex-direction: row;
-    justify-content: flex-start;
+    padding: 10px 6px;
+    flex-direction: column;
     align-items: center;
-    text-align: left;
-    gap: 14px;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
     border-radius: 13px;
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+      flex 0.35s ease,
+      border-color 0.25s,
+      background 0.25s;
   }
 
   .service-card svg {
     flex: none;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
   }
 
   .service-card h3 {
-    font-size: 18px;
+    font-size: 13px;
+    line-height: 1.15;
     margin: 0;
   }
 
   .service-card p {
+    margin: 0;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
     font-size: 11px;
-    margin: 2px 0 0;
+    line-height: 1.35;
+    transition:
+      max-height 0.35s ease,
+      opacity 0.25s ease;
   }
 
+  /* the tapped tile takes all the space the others leave */
+  .service-card.open {
+    flex: 1 1 0;
+    border-color: var(--gold);
+    background: linear-gradient(140deg, #1b1710, #3a2f1b);
+  }
+
+  .service-card.open p {
+    max-height: 60px;
+    opacity: 1;
+  }
+
+  /* idle tiles: narrow, icon only */
+  .services.has-open .service-card:not(.open) {
+    flex: 0 0 58px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .services.has-open .service-card:not(.open) h3 {
+    display: none;
+  }
+
+  /* ----- rest of the page ----- */
   .heading {
     align-items: flex-start;
     gap: 15px;
@@ -1241,6 +1327,7 @@ footer {
   .car-btn.prev {
     left: 6px;
   }
+
   .car-btn.next {
     right: 6px;
   }

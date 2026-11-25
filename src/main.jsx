@@ -20,11 +20,23 @@ import "./styles.css";
 
 // Change this one line to replace the hero background.
 // Use a remote URL, or a local file placed in /public, e.g. '/images/hero.jpg'
-const HERO_IMAGES = [
-  "/images/image_001.jpeg",
-  "/images/image_002.jpeg",
-  "/images/image_003.jpeg",
-  "/images/image_004.jpeg",
+const HERO_SLIDES = [
+  {
+    desktop: "/images/image_001.jpeg",
+    mobile: "/images/mobile/image_001.jpg",
+  },
+  {
+    desktop: "/images/image_002.jpeg",
+    mobile: "/images/mobile/image_002.jpg",
+  },
+  {
+    desktop: "/images/image_003.jpeg",
+    mobile: "/images/mobile/image_003.jpg",
+  },
+  {
+    desktop: "/images/image_004.jpeg",
+    mobile: "/images/mobile/image_004.jpg",
+  },
 ];
 const HERO_DELAY = 5000;
 const SOCIAL_ICONS = {
@@ -45,49 +57,58 @@ const SOCIAL_ICONS = {
     </>
   ),
 };
-
+const SERVICE_TILES = [
+  [Plane, "Airport Transfers", "Arrive & depart with ease"],
+  [CarFront, "Private Rides", "Comfortable and punctual rides"],
+  [MapPin, "Tours & Day Trips", "Discover the paradise island"],
+];
 const tours = [
   {
     id: "001",
     name: "Colombo",
-    price: 70,
+    price: 6000,
     image: "/images/tours/image_colombo.jpg",
   },
   {
     id: "002",
     name: "Sigiriya",
-    price: 70,
+    price: 18000,
     image: "/images/tours/image_sigiriya.jpg",
   },
-  { id: "003", name: "Ella", price: 60, image: "/images/tours/image_ella.jpg" },
+  {
+    id: "003",
+    name: "Ella",
+    price: 45000,
+    image: "/images/tours/image_ella.jpg",
+  },
   {
     id: "004",
     name: "Mirissa",
-    price: 65,
+    price: 22000,
     image: "/images/tours/image_mirissa.jpg",
   },
   {
     id: "005",
     name: "Galle",
-    price: 60,
+    price: 17500,
     image: "/images/tours/image_galle.jpg",
   },
   {
     id: "006",
     name: "Kandy",
-    price: 75,
+    price: 16000,
     image: "/images/tours/image_kandy.jpg",
   },
   {
     id: "007",
     name: "Nuwara Eliya",
-    price: 80,
+    price: 20000,
     image: "/images/tours/image_nuwaraeliya.jpg",
   },
   {
     id: "008",
     name: "Negombo",
-    price: 30,
+    price: 3500,
     image: "/images/tours/image_negombo.jpg",
   },
 ];
@@ -150,45 +171,51 @@ const tomorrowStr = () => {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().split("T")[0];
 };
-
-function App({ heroImages = HERO_IMAGES }) {
+function App({ heroSlides = HERO_SLIDES }) {
   const [slide, setSlide] = useState(0);
   const [service, setService] = useState("Airport Transfer");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [menu, setMenu] = useState(false);
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setQuoteOpen(false);
-    alert("Thanks! Your quotation request has been received.");
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form));
+    setSending(true);
+    try {
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, service, direction, passengers }),
+      });
+      if (!res.ok) throw new Error("failed");
+      setQuoteOpen(false);
+      alert("Thanks! Your quotation request has been received.");
+    } catch {
+      alert(
+        "Sorry, we couldn't send your request. Please contact us on WhatsApp.",
+      );
+    } finally {
+      setSending(false);
+    }
   };
   const [date, setDate] = useState(tomorrowStr);
   const [dateError, setDateError] = useState("");
   const [direction, setDirection] = useState("arrival"); // 'arrival' = from airport, 'departure' = to airport
+  const [passengers, setPassengers] = useState("1 Passengers");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    heroImages.forEach((src) => {
+    const isPhone = window.matchMedia("(max-width: 560px)").matches;
+    heroSlides.forEach((s) => {
       const i = new Image();
-      i.src = src;
-    }); // preload so fades are smooth
+      i.src = isPhone && s.mobile ? s.mobile : s.desktop;
+    });
     const id = setInterval(
-      () => setSlide((s) => (s + 1) % heroImages.length),
+      () => setSlide((s) => (s + 1) % heroSlides.length),
       HERO_DELAY,
     );
     return () => clearInterval(id);
-  }, [heroImages]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      const el = ref.current;
-      if (!el) return;
-      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
-      el.scrollTo({
-        left: atEnd ? 0 : el.scrollLeft + el.clientWidth,
-        behavior: "smooth",
-      });
-    }, 6000);
-    return () => clearInterval(id);
-  }, [reviews]);
+  }, [heroSlides]);
 
   useEffect(() => {
     const refresh = () => {
@@ -234,11 +261,16 @@ function App({ heroImages = HERO_IMAGES }) {
       <main id="home">
         <section className="hero">
           <div className="hero-slides">
-            {heroImages.map((src, i) => (
+            {heroSlides.map((s, i) => (
               <div
-                key={src}
+                key={s.desktop}
                 className={"hero-slide" + (i === slide ? " active" : "")}
-                style={{ backgroundImage: `url("${encodeURI(src)}")` }}
+                style={{
+                  "--img": `url("${encodeURI(s.desktop)}")`,
+                  ...(s.mobile && {
+                    "--img-m": `url("${encodeURI(s.mobile)}")`,
+                  }),
+                }}
               />
             ))}
           </div>
@@ -332,7 +364,10 @@ function App({ heroImages = HERO_IMAGES }) {
                   />
                 </label>
               </div>
-              <Select>
+              <Select
+                value={passengers}
+                onChange={(e) => setPassengers(e.target.value)}
+              >
                 <option>1 Passengers</option>
                 <option>2 Passengers</option>
                 <option>3 Passengers</option>
@@ -352,19 +387,7 @@ function App({ heroImages = HERO_IMAGES }) {
           </div>
         </section>
 
-        <section className="wrap services">
-          {[
-            [Plane, "Airport Transfers", "Arrive & depart with ease"],
-            [CarFront, "Private Rides", "Comfortable and punctual rides"],
-            [RouteArrowRight, "Tours & Day Trips", "Discover the paradise island"]
-          ].map(([I, t, s]) => (
-            <div className="service-card" key={t}>
-              <I />
-              <h3>{t}</h3>
-              <p>{s}</p>
-            </div>
-          ))}
-        </section>
+        <ServiceTiles items={SERVICE_TILES} />
 
         <section className="wrap section" id="tours">
           <SectionHeading
@@ -426,9 +449,19 @@ function App({ heroImages = HERO_IMAGES }) {
             </p>
             <form onSubmit={submit}>
               <div className="two">
-                <input required placeholder="Your name" />
-                <input required placeholder="WhatsApp number" />
+                <input name="name" required placeholder="Your name" />
+                <input
+                  name="whatsapp"
+                  required
+                  placeholder="WhatsApp number (with country code)"
+                />
               </div>
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="Email address"
+              />
               <TripFields
                 service={service}
                 direction={direction}
@@ -436,6 +469,7 @@ function App({ heroImages = HERO_IMAGES }) {
               />
               <div className="two">
                 <input
+                  name="date"
                   type="date"
                   required
                   value={date}
@@ -443,6 +477,7 @@ function App({ heroImages = HERO_IMAGES }) {
                   onChange={(e) => setDate(e.target.value)}
                 />
                 <select
+                  name="service"
                   value={service}
                   onChange={(e) => setService(e.target.value)}
                 >
@@ -452,6 +487,7 @@ function App({ heroImages = HERO_IMAGES }) {
                 </select>
               </div>
               <textarea
+                name="message"
                 rows="4"
                 placeholder={
                   service === "Tours & Day Trips"
@@ -459,8 +495,24 @@ function App({ heroImages = HERO_IMAGES }) {
                     : "Anything else we should know?"
                 }
               ></textarea>
-              <button className="submit">
-                Send Request <ArrowRight />
+
+              {/* honeypot: hidden from real users, bots fill it */}
+              <input
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                style={{ position: "absolute", left: "-9999px" }}
+              />
+
+              <button className="submit" disabled={sending}>
+                {sending ? (
+                  "Sending..."
+                ) : (
+                  <>
+                    Send Request <ArrowRight />
+                  </>
+                )}
               </button>
             </form>
           </div>
@@ -551,7 +603,7 @@ function TourCard({ tour }) {
         </h3>
         <div>
           <span>
-            <Star /> From ${tour.price}
+            <Star /> From LKR {tour.price}
           </span>
         </div>
       </div>
@@ -669,6 +721,19 @@ function ReviewCarousel({ reviews }) {
   };
 
   useEffect(() => {
+    const id = setInterval(() => {
+      const el = ref.current;
+      if (!el) return;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+      el.scrollTo({
+        left: atEnd ? 0 : el.scrollLeft + el.clientWidth,
+        behavior: "smooth",
+      });
+    }, 6000);
+    return () => clearInterval(id);
+  }, [reviews]);
+
+  useEffect(() => {
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
@@ -762,6 +827,7 @@ function TripFields({ service, direction, setDirection }) {
         </p>
         <div className="two">
           <input
+            name="hotel"
             required
             placeholder={
               direction === "arrival"
@@ -770,6 +836,7 @@ function TripFields({ service, direction, setDirection }) {
             }
           />
           <input
+            name="flight"
             placeholder={
               direction === "arrival"
                 ? "Flight number (optional)"
@@ -784,8 +851,8 @@ function TripFields({ service, direction, setDirection }) {
     return (
       <div className="trip-fields">
         <div className="two">
-          <input required placeholder="Pickup location" />
-          <input placeholder="Number of days" />
+          <input name="pickup" required placeholder="Pickup location" />
+          <input name="days" placeholder="Number of days" />
         </div>
       </div>
     );
@@ -793,10 +860,52 @@ function TripFields({ service, direction, setDirection }) {
   return (
     <div className="trip-fields">
       <div className="two">
-        <input required placeholder="From" />
-        <input required placeholder="To" />
+        <input name="from" required placeholder="From" />
+        <input name="to" required placeholder="To" />
       </div>
     </div>
+  );
+}
+function ServiceTiles({ items }) {
+  const [open, setOpen] = useState(null);
+  const ref = useRef(null);
+
+  // tapping anywhere outside the tiles puts everything back to normal
+  useEffect(() => {
+    const away = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(null);
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, []);
+
+  return (
+    <section
+      className={"wrap services" + (open !== null ? " has-open" : "")}
+      id="transport"
+      ref={ref}
+    >
+      {items.map(([I, t, s], i) => (
+        <div
+          key={t}
+          role="button"
+          tabIndex={0}
+          aria-expanded={open === i}
+          className={"service-card" + (open === i ? " open" : "")}
+          onClick={() => setOpen(open === i ? null : i)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setOpen(open === i ? null : i);
+            }
+          }}
+        >
+          <I />
+          <h3>{t}</h3>
+          <p>{s}</p>
+        </div>
+      ))}
+    </section>
   );
 }
 createRoot(document.getElementById("root")).render(<App />);

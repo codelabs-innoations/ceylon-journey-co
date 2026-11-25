@@ -3,6 +3,12 @@
   "compatibility_date": "2026-11-25",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "MAIL_FROM": "ceylonjourney@gmail.com",
+    "MAIL_TO": "dashezlevin@gmail.com"
   }
 }
