@@ -71,21 +71,21 @@ const tours = [
   },
   {
     id: "002",
+    name: "Kandy",
+    price: 16000,
+    image: "/images/tours/image_kandy.jpg",
+  },
+  {
+    id: "003",
     name: "Sigiriya",
     price: 18000,
     image: "/images/tours/image_sigiriya.jpg",
   },
   {
-    id: "003",
+    id: "004",
     name: "Ella",
     price: 45000,
     image: "/images/tours/image_ella.jpg",
-  },
-  {
-    id: "004",
-    name: "Mirissa",
-    price: 22000,
-    image: "/images/tours/image_mirissa.jpg",
   },
   {
     id: "005",
@@ -95,22 +95,58 @@ const tours = [
   },
   {
     id: "006",
-    name: "Kandy",
-    price: 16000,
-    image: "/images/tours/image_kandy.jpg",
+    name: "Mirissa",  
+    price: 22000,
+    image: "/images/tours/image_mirissa.jpg",
   },
   {
     id: "007",
+    name: "Weligama",
+    price: 21000,
+    image: "/images/tours/image_weligama.jpg",
+  },
+  {
+    id: "008",
+    name: "Trincomalee",
+    price: 37000,
+    image: "/images/tours/image_trincomalee.jpg",
+  },
+  {
+    id: "009",
     name: "Nuwara Eliya",
     price: 20000,
     image: "/images/tours/image_nuwaraeliya.jpg",
   },
   {
-    id: "008",
+    id: "010",
+    name: "Mathara",
+    price: 24000,
+    image: "/images/tours/image_mathara.jpg",
+  },
+  {
+    id: "011",
     name: "Negombo",
-    price: 3500,
+    price: 3000,
     image: "/images/tours/image_negombo.jpg",
   },
+  {
+    id: "012",
+    name: "Arugambay",
+    price: 55000,
+    image: "/images/tours/image_arugambay.jpg",
+  },
+  {
+    id: "013",
+    name: "Batticaloa",
+    price: 36000,
+    image: "/images/tours/image_batticaloa.jpg",
+  },
+  {
+    id: "014",
+    name: "Jaffna",
+    price: 46500,
+    image: "/images/tours/image_jaffna.jpg",
+  }
 ];
 const moments = [
   { id: "m1", src: "/images/moments/m1.jpg", alt: "Guests at Galle Fort" },

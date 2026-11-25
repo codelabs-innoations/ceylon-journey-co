@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ceylon-journey-co",
   "main": "worker/index.js",
-  "compatibility_date": "2026-11-25",
+  "compatibility_date": "2026-11-24",
   "observability": {
     "enabled": true
   },
