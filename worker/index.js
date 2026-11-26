@@ -1,13 +1,6 @@
-const SERVICES = ["Airport Transfer", "Private Ride", "Tours & Day Trips"];
+import { ownerEmail, customerEmail } from "./email.js";
 
-const esc = (s = "") =>
-  String(s).replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ],
-  );
+const SERVICES = ["Airport Transfer", "Private Ride", "Tours & Day Trips"];
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -114,27 +107,12 @@ async function handleQuote(request, env) {
     ? `+${wa.slice(0, 2)} ${wa.slice(2, 4)} ${wa.slice(4, 7)} ${wa.slice(7)}`
     : `+${wa}`;
 
-  const rows = [
-    ["Name", q.name],
-    ["WhatsApp", q.whatsapp],
-    ["Email", q.email],
-    ["Service", q.service],
-    ["Direction", q.direction],
-    ["Date", q.date],
-    ["Passengers", q.passengers],
-    ["Hotel / address", q.hotel],
-    ["Flight", q.flight],
-    ["Pickup", q.pickup],
-    ["Days", q.days],
-    ["From", q.from],
-    ["To", q.to],
-    ["Notes", q.message],
-  ].filter(([, v]) => v);
-
-  const plain = rows.map(([k, v]) => `${k}: ${v}`).join("\n");
-  const table = `<table cellpadding="6" style="border-collapse:collapse">${rows
-    .map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>`)
-    .join("")}</table>`;
+  const ctx = {
+    wa,
+    waShown,
+    siteUrl: String(env.SITE_URL || "https://ceylonjourneyco.org.lk").replace(/\/+$/, ""),
+  };
+  const owner = ownerEmail(q, ctx);
 
   try {
     // 1) notification to you
@@ -143,27 +121,20 @@ async function handleQuote(request, env) {
       to: [{ email: env.MAIL_TO }],
       replyTo: { email: q.email, name: q.name },
       subject: `New quote request: ${q.service} (${q.name})`,
-      textContent: plain,
-      htmlContent: table,
+      textContent: owner.text,
+      htmlContent: owner.html,
     });
 
     // 2) copy to the customer (best effort)
     try {
+      const copy = customerEmail(q, ctx);
       await brevo(env, {
         sender: { name: "Ceylon Journey Co.", email: env.MAIL_FROM },
         to: [{ email: q.email, name: q.name }],
         replyTo: { email: env.MAIL_TO },
         subject: "We received your quote request - Ceylon Journey Co.",
-        textContent:
-          `Hi ${q.name},\n\nThank you for your request. We'll get back to you shortly ` +
-          `with the best option.\n\nYour request:\n${plain}\n\n` +
-          `Need us sooner? WhatsApp ${waShown}.\n\nCeylon Journey Co.`,
-        htmlContent:
-          `<p>Hi ${esc(q.name)},</p>` +
-          `<p>Thank you for your request. We'll get back to you shortly with the best option.</p>` +
-          `<p><b>Your request</b></p>${table}` +
-          `<p>Need us sooner? WhatsApp <a href="https://wa.me/${wa}">${waShown}</a>.</p>` +
-          `<p>Ceylon Journey Co.<br/>Explore · Travel · Experience</p>`,
+        textContent: copy.text,
+        htmlContent: copy.html,
       });
     } catch (err) {
       console.error("Customer copy failed:", err);
