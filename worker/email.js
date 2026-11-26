@@ -65,7 +65,7 @@ const shell = ({ preheader, body, siteUrl }) => `<!doctype html>
   <tr><td align="center" style="background:${DARK};padding:26px 20px 22px">
     <img src="${esc(siteUrl)}/car-mark.png" width="150" alt="" style="display:block;margin:0 auto 6px;border:0;max-width:150px;height:auto"/>
     <div style="font-family:${SERIF};font-size:27px;font-weight:bold;color:${GOLD};line-height:1.1">Ceylon Journey Co.</div>
-    <div style="font-family:${SANS};font-size:11px;letter-spacing:2px;color:#ffffff;margin-top:6px">RIDES &middot; TOURS &middot; MORE</div>
+    <div style="font-family:${SANS};font-size:11px;letter-spacing:2px;color:#ffffff;margin-top:6px">Explore &middot; Travel &middot; Experience</div>
   </td></tr>
   <tr><td style="height:4px;background:${GOLD};font-size:0;line-height:0">&nbsp;</td></tr>
   <tr><td style="padding:28px 26px 8px">${body}</td></tr>
