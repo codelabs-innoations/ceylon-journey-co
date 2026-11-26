@@ -1,11 +1,31 @@
 const esc = (s = "") =>
-  String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },
   });
+
+async function handleTours(env) {
+  const { results } = await env.DB.prepare(
+    `SELECT id, name, price, image FROM tours
+     WHERE active = 1 ORDER BY sort_order, name`,
+  ).all();
+
+  return new Response(JSON.stringify(results), {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=60",
+    },
+  });
+}
 
 async function brevo(env, payload) {
   const r = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -101,8 +121,17 @@ async function handleQuote(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (pathname === "/api/tours" && request.method === "GET") {
+      try {
+        return await handleTours(env);
+      } catch (err) {
+        console.error("tours failed", err);
+        return json({ error: "Could not load tours." }, 500);
+      }
+    }
     if (url.pathname === "/api/quote") {
-      if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
+      if (request.method !== "POST")
+        return json({ error: "Method not allowed" }, 405);
       return handleQuote(request, env);
     }
     return env.ASSETS.fetch(request); // everything else: your website

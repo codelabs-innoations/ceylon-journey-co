@@ -62,6 +62,7 @@ const SERVICE_TILES = [
   [CarFront, "Private Rides", "Comfortable and punctual rides"],
   [MapPin, "Tours & Day Trips", "Discover the paradise island"],
 ];
+// const tours = useTours(localTours);
 const tours = [
   {
     id: "001",
@@ -95,7 +96,7 @@ const tours = [
   },
   {
     id: "006",
-    name: "Mirissa",  
+    name: "Mirissa",
     price: 22000,
     image: "/images/tours/image_mirissa.jpg",
   },
@@ -430,7 +431,7 @@ function App({ heroSlides = HERO_SLIDES }) {
             kicker="POPULAR TOURS"
             title="Discover Sri Lanka’s Beauty"
           />
-          <TourCarousel tours={tours} />
+          {tours && <TourCarousel tours={tours} />}
         </section>
 
         <section className="wrap section moments" id="gallery">
@@ -943,5 +944,19 @@ function ServiceTiles({ items }) {
       ))}
     </section>
   );
+}
+function useTours(fallback) {
+  const [tours, setTours] = useState(null);
+  useEffect(() => {
+    const c = new AbortController();
+    fetch("/api/tours", { signal: c.signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => setTours(data.length ? data : fallback))
+      .catch((e) => {
+        if (e.name !== "AbortError") setTours(fallback);
+      });
+    return () => c.abort();
+  }, []);
+  return tours;
 }
 createRoot(document.getElementById("root")).render(<App />);

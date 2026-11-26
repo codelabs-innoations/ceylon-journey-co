@@ -1,19 +1,29 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ceylon-journey-co",
-  "main": "worker/index.js",
-  "compatibility_date": "2026-11-24",
-  "observability": {
-    "enabled": true
-  },
-  "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS",
-    "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
-  },
-  "vars": {
-    "MAIL_FROM": "ceylonjourney@gmail.com",
-    "MAIL_TO": "dashezlevin@gmail.com"
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ceylon-journey-co",
+	"main": "worker/index.js",
+	"compatibility_date": "2026-11-24",
+	"observability": {
+		"enabled": true
+	},
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application",
+		"run_worker_first": [
+			"/api/*"
+		]
+	},
+	"vars": {
+		"MAIL_FROM": "noreply@ceylonjourneyco.org.lk",
+		"MAIL_TO": "dashezlevin@gmail.com"
+	},
+	"d1_databases": [
+		{
+			"binding": "ceylon_journey_db",
+			"database_name": "ceylon-journey-db",
+			"database_id": "f32feca5-4a57-4c12-8187-c67065f21cfb",
+			"remote": true
+		}
+	]
 }
