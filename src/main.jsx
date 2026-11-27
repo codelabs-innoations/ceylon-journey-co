@@ -95,15 +95,6 @@ const reviews = [
     text: "Our Ella and Mirissa trip was relaxed and well organised. Great local tips along the way.",
   },
 ];
-const socials = [
-  { id: "facebook", label: "Facebook", url: env.FACEBOOK_URL },
-  {
-    id: "instagram",
-    label: "Instagram",
-    url: env.INSTAGRAM_URL,
-  },
-  // { id: 'youtube',   label: 'YouTube',   url: 'https://youtube.com/@yourchannel' }
-];
 const todayStr = () => {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
