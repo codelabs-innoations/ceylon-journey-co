@@ -96,11 +96,11 @@ const reviews = [
   },
 ];
 const socials = [
-  { id: "facebook", label: "Facebook", url: "https://facebook.com/yourpage" },
+  { id: "facebook", label: "Facebook", url: "https://www.facebook.com/CeylonJourneyCo" },
   {
     id: "instagram",
     label: "Instagram",
-    url: "https://instagram.com/yourpage",
+    url: "https://www.instagram.com/ceylonjourneyco",
   },
   // { id: 'youtube',   label: 'YouTube',   url: 'https://youtube.com/@yourchannel' }
 ];
