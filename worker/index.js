@@ -5,11 +5,17 @@ const SERVICES = ["Airport Transfer", "Private Ride", "Tours & Day Trips"];
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+    },
   });
 
 // trim and cap the length of anything a visitor sends
-const clean = (v, max = 200) => String(v ?? "").trim().slice(0, max);
+const clean = (v, max = 200) =>
+  String(v ?? "")
+    .trim()
+    .slice(0, max);
 
 // today in Sri Lanka as YYYY-MM-DD
 const todayLK = () =>
@@ -36,6 +42,18 @@ async function handleTours(env) {
   });
 }
 
+async function handleMoments(env) {
+  const { results } = await env.DB.prepare(
+    `SELECT id, src, alt FROM moments WHERE active = 1 ORDER BY sort_order, id`,
+  ).all();
+  return new Response(JSON.stringify(results), {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=60",
+    },
+  });
+}
+
 async function brevo(env, payload) {
   const r = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -50,14 +68,11 @@ async function brevo(env, payload) {
 }
 
 async function handleQuote(request, env) {
-  // the email settings must exist, otherwise say so clearly in the logs
+  // missing email settings are logged, but the request is still saved to the database
   const missing = ["BREVO_API_KEY", "MAIL_FROM", "MAIL_TO"].filter(
     (k) => !env[k],
   );
-  if (missing.length) {
-    console.error("Missing settings:", missing.join(", "));
-    return json({ error: "Failed to send" }, 500);
-  }
+  if (missing.length) console.error("Missing settings:", missing.join(", "));
 
   let body;
   try {
@@ -110,12 +125,47 @@ async function handleQuote(request, env) {
   const ctx = {
     wa,
     waShown,
-    siteUrl: String(env.SITE_URL || "https://ceylonjourneyco.org.lk").replace(/\/+$/, ""),
+    siteUrl: String(env.SITE_URL || "https://ceylonjourneyco.org.lk").replace(
+      /\/+$/,
+      "",
+    ),
   };
-  const owner = ownerEmail(q, ctx);
 
+  // 1) save the request first, so it is never lost even if the email fails
+  let quoteId = null;
   try {
-    // 1) notification to you
+    const r = await env.DB.prepare(
+      `INSERT INTO quote_requests
+        (name, whatsapp, email, service, direction, travel_date, passengers,
+         hotel, flight, pickup, days, from_place, to_place, message)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`,
+    )
+      .bind(
+        q.name,
+        q.whatsapp,
+        q.email,
+        q.service,
+        q.direction || null,
+        q.date,
+        q.passengers || null,
+        q.hotel || null,
+        q.flight || null,
+        q.pickup || null,
+        q.days || null,
+        q.from || null,
+        q.to || null,
+        q.message || null,
+      )
+      .run();
+    quoteId = r.meta?.last_row_id ?? null;
+  } catch (err) {
+    console.error("Saving quote failed:", err);
+  }
+
+  // 2) email you, then send the customer a copy
+  const owner = ownerEmail(q, ctx);
+  let notified = false;
+  try {
     await brevo(env, {
       sender: { name: "Ceylon Journey Co. Website", email: env.MAIL_FROM },
       to: [{ email: env.MAIL_TO }],
@@ -124,14 +174,14 @@ async function handleQuote(request, env) {
       textContent: owner.text,
       htmlContent: owner.html,
     });
+    notified = true;
 
-    // 2) copy to the customer (best effort)
     try {
       const copy = customerEmail(q, ctx);
       await brevo(env, {
         sender: { name: "Ceylon Journey Co.", email: env.MAIL_FROM },
         to: [{ email: q.email, name: q.name }],
-        replyTo: { email: env.MAIL_TO },
+        replyTo: { email: env.REPLY_TO || env.MAIL_TO },
         subject: "We received your quote request - Ceylon Journey Co.",
         textContent: copy.text,
         htmlContent: copy.html,
@@ -139,12 +189,25 @@ async function handleQuote(request, env) {
     } catch (err) {
       console.error("Customer copy failed:", err);
     }
-
-    return json({ ok: true });
   } catch (err) {
-    console.error(err);
-    return json({ error: "Failed to send" }, 500);
+    console.error("Owner email failed:", err);
   }
+
+  if (quoteId && notified) {
+    try {
+      await env.DB.prepare(
+        "UPDATE quote_requests SET email_sent = 1 WHERE id = ?1",
+      )
+        .bind(quoteId)
+        .run();
+    } catch (err) {
+      console.error("Updating email_sent failed:", err);
+    }
+  }
+
+  // success if the request was saved or emailed; fail only if both failed
+  if (quoteId || notified) return json({ ok: true });
+  return json({ error: "Failed to send" }, 500);
 }
 
 export default {
@@ -157,6 +220,15 @@ export default {
       } catch (err) {
         console.error("tours failed", err);
         return json({ error: "Could not load tours." }, 500);
+      }
+    }
+
+    if (pathname === "/api/moments" && request.method === "GET") {
+      try {
+        return await handleMoments(env);
+      } catch (err) {
+        console.error("moments failed", err);
+        return json({ error: "Could not load moments." }, 500);
       }
     }
 

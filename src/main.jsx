@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ArrowRight,
-  ArrowUpRight,
   CalendarDays,
   CarFront,
   ChevronDown,
@@ -14,7 +13,7 @@ import {
   Plane,
   ShieldCheck,
   Star,
-  RouteArrowRight,
+  TreePalm,
 } from "lucide-react";
 import "./styles.css";
 
@@ -61,93 +60,6 @@ const SERVICE_TILES = [
   [Plane, "Airport Transfers", "Arrive & depart with ease"],
   [CarFront, "Private Rides", "Comfortable and punctual rides"],
   [MapPin, "Tours & Day Trips", "Discover the paradise island"],
-];
-// const tours = useTours(localTours);
-const tours = [
-  {
-    id: "001",
-    name: "Colombo",
-    price: 6000,
-    image: "/images/tours/image_colombo.jpg",
-  },
-  {
-    id: "002",
-    name: "Kandy",
-    price: 16000,
-    image: "/images/tours/image_kandy.jpg",
-  },
-  {
-    id: "003",
-    name: "Sigiriya",
-    price: 18000,
-    image: "/images/tours/image_sigiriya.jpg",
-  },
-  {
-    id: "004",
-    name: "Ella",
-    price: 45000,
-    image: "/images/tours/image_ella.jpg",
-  },
-  {
-    id: "005",
-    name: "Galle",
-    price: 17500,
-    image: "/images/tours/image_galle.jpg",
-  },
-  {
-    id: "006",
-    name: "Mirissa",
-    price: 22000,
-    image: "/images/tours/image_mirissa.jpg",
-  },
-  {
-    id: "007",
-    name: "Weligama",
-    price: 21000,
-    image: "/images/tours/image_weligama.jpg",
-  },
-  {
-    id: "008",
-    name: "Trincomalee",
-    price: 37000,
-    image: "/images/tours/image_trincomalee.jpg",
-  },
-  {
-    id: "009",
-    name: "Nuwara Eliya",
-    price: 20000,
-    image: "/images/tours/image_nuwaraeliya.jpg",
-  },
-  {
-    id: "010",
-    name: "Mathara",
-    price: 24000,
-    image: "/images/tours/image_mathara.jpg",
-  },
-  {
-    id: "011",
-    name: "Negombo",
-    price: 3000,
-    image: "/images/tours/image_negombo.jpg",
-  },
-  {
-    id: "012",
-    name: "Arugambay",
-    price: 55000,
-    image: "/images/tours/image_arugambay.jpg",
-  },
-  {
-    id: "013",
-    name: "Batticaloa",
-    price: 36000,
-    image: "/images/tours/image_batticaloa.jpg",
-  },
-  {
-    id: "014",
-    name: "Jaffna",
-    price: 46500,
-    image: "/images/tours/image_jaffna.jpg",
-  }
 ];
 const moments = [
   { id: "m1", src: "/images/moments/m1.jpg", alt: "Guests at Galle Fort" },
@@ -213,6 +125,8 @@ function App({ heroSlides = HERO_SLIDES }) {
   const [service, setService] = useState("Airport Transfer");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [menu, setMenu] = useState(false);
+  const tours = useList("/api/tours");
+  const moments = useList("/api/moments");
   const submit = async (e) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -346,7 +260,7 @@ function App({ heroSlides = HERO_SLIDES }) {
                   }
                 />
                 <Feature
-                  icon={<span className="palm">♨</span>}
+                  icon={<TreePalm />}
                   text={
                     <>
                       Sri Lanka
@@ -405,7 +319,7 @@ function App({ heroSlides = HERO_SLIDES }) {
                 value={passengers}
                 onChange={(e) => setPassengers(e.target.value)}
               >
-                <option>1 Passengers</option>
+                <option>1 Passenger</option>
                 <option>2 Passengers</option>
                 <option>3 Passengers</option>
                 <option>4 Passengers</option>
@@ -426,22 +340,27 @@ function App({ heroSlides = HERO_SLIDES }) {
 
         <ServiceTiles items={SERVICE_TILES} />
 
-        <section className="wrap section" id="tours">
-          <SectionHeading
-            kicker="POPULAR TOURS"
-            title="Discover Sri Lanka’s Beauty"
-          />
-          {tours && <TourCarousel tours={tours} />}
-        </section>
+        {tours && tours.length > 0 && (
+          <section className="wrap section" id="tours">
+            <SectionHeading
+              kicker="POPULAR TOURS"
+              title="Discover Sri Lanka’s Beauty"
+              subtitle="Your journey begins at the airport. Here are our fares from Bandaranaike International Airport (CMB) to each destination."
+            />
+            <TourCarousel tours={tours} />
+          </section>
+        )}
 
-        <section className="wrap section moments" id="gallery">
-          <SectionHeading
-            kicker="OUR JOURNEYS"
-            title="Special Moments"
-            subtitle="A glimpse of the beautiful journeys we’ve shared together."
-          />
-          <MomentsMarquee photos={moments} />
-        </section>
+        {moments && moments.length > 0 && (
+          <section className="wrap section moments" id="gallery">
+            <SectionHeading
+              kicker="OUR JOURNEYS"
+              title="Special Moments"
+              subtitle="A glimpse of the beautiful journeys we’ve shared together."
+            />
+            <MomentsMarquee photos={moments} />
+          </section>
+        )}
 
         <section className="wrap testimonials">
           <ReviewCarousel reviews={reviews} />
@@ -640,7 +559,7 @@ function TourCard({ tour }) {
         </h3>
         <div>
           <span>
-            <Star /> From LKR {tour.price}
+            <Star /> From CMB · LKR {Number(tour.price).toLocaleString("en-LK")}
           </span>
         </div>
       </div>
@@ -945,18 +864,21 @@ function ServiceTiles({ items }) {
     </section>
   );
 }
-function useTours(fallback) {
-  const [tours, setTours] = useState(null);
+function useList(url) {
+  const [items, setItems] = useState(null);
   useEffect(() => {
     const c = new AbortController();
-    fetch("/api/tours", { signal: c.signal })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => setTours(data.length ? data : fallback))
+    fetch(url, { signal: c.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to fetch ${url}: ${r.status}`);
+        return r.json();
+      })
+      .then(setItems)
       .catch((e) => {
-        if (e.name !== "AbortError") setTours(fallback);
+        if (e.name !== "AbortError") setItems([]);
       });
     return () => c.abort();
-  }, []);
-  return tours;
+  }, [url]);
+  return items;
 }
 createRoot(document.getElementById("root")).render(<App />);

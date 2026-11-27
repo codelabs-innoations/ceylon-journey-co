@@ -15,12 +15,13 @@
 		]
 	},
 	"vars": {
-		"MAIL_FROM": "noreply@ceylonjourneyco.org.lk",
-		"MAIL_TO": "ceylonjourneyco@gmail.com"
+    "MAIL_FROM": "noreply@ceylonjourneyco.org.lk",
+    "MAIL_TO": "ceylonjourneyco@gmail.com",
+    "REPLY_TO": "info@ceylonjourneyco.org.lk"
 	},
 	"d1_databases": [
 		{
-			"binding": "ceylon_journey_db",
+			"binding": "DB",
 			"database_name": "ceylon-journey-db",
 			"database_id": "f32feca5-4a57-4c12-8187-c67065f21cfb",
 			"remote": true
