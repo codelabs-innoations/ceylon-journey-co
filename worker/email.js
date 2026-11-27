@@ -8,7 +8,9 @@ export const esc = (s = "") =>
   String(s).replace(
     /[&<>"']/g,
     (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
   );
 
 const multiline = (s) => esc(s).replace(/\r?\n/g, "<br/>");
@@ -32,7 +34,15 @@ const detailRows = (q) =>
   [
     ["🚗", "Service", q.service],
     ["📅", "Date", q.date],
-    ["↔️", "Direction", q.direction === "arrival" ? "Airport → hotel" : q.direction === "departure" ? "Hotel → airport" : q.direction],
+    [
+      "↔️",
+      "Direction",
+      q.direction === "arrival"
+        ? "Airport → hotel"
+        : q.direction === "departure"
+          ? "Hotel → airport"
+          : q.direction,
+    ],
     ["👥", "Passengers", q.passengers],
     ["🏨", "Hotel / address", q.hotel],
     ["✈️", "Flight", q.flight],
@@ -79,6 +89,18 @@ const shell = ({ preheader, body, siteUrl }) => `<!doctype html>
 </td></tr></table>
 </body></html>`;
 
+const socialLinks = (socials = []) =>
+  socials.length
+    ? `<p style="margin:24px 0 0;font-family:${SANS};font-size:14px;color:#555">Follow our journeys: ` +
+      socials
+        .map(
+          (s) =>
+            `<a href="${esc(s.url)}" style="color:#b08a2e;font-weight:700;text-decoration:none">${esc(s.label)}</a>`,
+        )
+        .join(" &nbsp;&middot;&nbsp; ") +
+      `</p>`
+    : "";
+
 // ---------- email to you ----------
 export function ownerEmail(q, ctx) {
   const num = toIntlDigits(q.whatsapp);
@@ -102,16 +124,30 @@ export function ownerEmail(q, ctx) {
     `</div></td></tr></table>` +
     // action buttons
     `<div style="margin-bottom:12px">` +
-    button(`https://wa.me/${num}?text=${encodeURIComponent(hello)}`, "💬&nbsp; WhatsApp", "#128C7E", "#ffffff") +
+    button(
+      `https://wa.me/${num}?text=${encodeURIComponent(hello)}`,
+      "💬&nbsp; WhatsApp",
+      "#128C7E",
+      "#ffffff",
+    ) +
     button(`tel:+${num}`, "📞&nbsp; Call", GOLD, "#111111") +
-    button(`mailto:${q.email}?subject=${encodeURIComponent("Your quote request - Ceylon Journey Co.")}`, "✉️&nbsp; Email", DARK, "#ffffff") +
+    button(
+      `mailto:${q.email}?subject=${encodeURIComponent("Your quote request - Ceylon Journey Co.")}`,
+      "✉️&nbsp; Email",
+      DARK,
+      "#ffffff",
+    ) +
     `</div>` +
     `<h2 style="margin:18px 0 10px;font-family:${SERIF};font-size:20px;color:#111">Trip details</h2>` +
     detailsTable(q) +
     `<p style="font-family:${SANS};font-size:12px;color:#8a8a8a;margin:16px 0 18px">Tip: pressing Reply on this email answers the customer directly.</p>`;
 
   return {
-    html: shell({ preheader: `${q.name} · ${q.service} · ${q.date}`, body, siteUrl: ctx.siteUrl }),
+    html: shell({
+      preheader: `${q.name} · ${q.service} · ${q.date}`,
+      body,
+      siteUrl: ctx.siteUrl,
+    }),
     text: textSummary(q, true),
   };
 }
@@ -127,24 +163,43 @@ export function customerEmail(q, ctx) {
     `<h2 style="margin:24px 0 6px;font-family:${SERIF};font-size:20px;color:#111">Need us sooner?</h2>` +
     `<p style="margin:0 0 12px;font-family:${SANS};font-size:14px;color:#555">Message or call us any time:</p>` +
     `<div style="margin-bottom:14px">` +
-    button(`https://wa.me/${ctx.wa}`, "💬&nbsp; WhatsApp us", "#128C7E", "#ffffff") +
+    button(
+      `https://wa.me/${ctx.wa}`,
+      "💬&nbsp; WhatsApp us",
+      "#128C7E",
+      "#ffffff",
+    ) +
     button(`tel:+${ctx.wa}`, `📞&nbsp; ${esc(ctx.waShown)}`, GOLD, "#111111") +
-    `</div>`;
+    `</div>` +
+    socialLinks(ctx.socials);
 
   return {
-    html: shell({ preheader: "We received your quote request", body, siteUrl: ctx.siteUrl }),
+    html: shell({
+      preheader: "We received your quote request",
+      body,
+      siteUrl: ctx.siteUrl,
+    }),
     text:
       `Hi ${first},\n\nThank you for your request. We'll get back to you shortly with the best option.\n\n` +
       `Your request:\n${textSummary(q, false)}\n\n` +
-      `Need us sooner? WhatsApp ${ctx.waShown}: https://wa.me/${ctx.wa}\n\nCeylon Journey Co.`,
+      `Need us sooner? WhatsApp ${ctx.waShown}: https://wa.me/${ctx.wa}\n` +
+      (ctx.socials?.length
+        ? `\nFollow us:\n${ctx.socials.map((s) => `${s.label}: ${s.url}`).join("\n")}\n`
+        : "") +
+      `\nCeylon Journey Co.`,
   };
 }
 
 function textSummary(q, withContact) {
   const lines = [];
   if (withContact) {
-    lines.push(`Name: ${q.name}`, `WhatsApp: ${q.whatsapp}`, `Email: ${q.email}`);
+    lines.push(
+      `Name: ${q.name}`,
+      `WhatsApp: ${q.whatsapp}`,
+      `Email: ${q.email}`,
+    );
   }
-  for (const [, label, value] of detailRows(q)) lines.push(`${label}: ${value}`);
+  for (const [, label, value] of detailRows(q))
+    lines.push(`${label}: ${value}`);
   return lines.join("\n");
 }

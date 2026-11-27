@@ -129,6 +129,10 @@ async function handleQuote(request, env) {
       /\/+$/,
       "",
     ),
+    socials: [
+      { label: "Facebook", url: env.FACEBOOK_URL },
+      { label: "Instagram", url: env.INSTAGRAM_URL },
+    ].filter((s) => s.url),
   };
 
   // 1) save the request first, so it is never lost even if the email fails
