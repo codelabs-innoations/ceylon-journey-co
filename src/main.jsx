@@ -96,11 +96,11 @@ const reviews = [
   },
 ];
 const socials = [
-  { id: "facebook", label: "Facebook", url: "https://www.facebook.com/CeylonJourneyCo" },
+  { id: "facebook", label: "Facebook", url: env.FACEBOOK_URL },
   {
     id: "instagram",
     label: "Instagram",
-    url: "https://www.instagram.com/ceylonjourneyco",
+    url: env.INSTAGRAM_URL,
   },
   // { id: 'youtube',   label: 'YouTube',   url: 'https://youtube.com/@yourchannel' }
 ];
@@ -127,6 +127,7 @@ function App({ heroSlides = HERO_SLIDES }) {
   const [menu, setMenu] = useState(false);
   const tours = useList("/api/tours");
   const moments = useList("/api/moments");
+  const socials = useList("/api/socials");
   const submit = async (e) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -384,7 +385,8 @@ function App({ heroSlides = HERO_SLIDES }) {
               <MessageCircle /> Chat on WhatsApp
             </a>
           </div>
-          <SocialLinks items={socials} />
+          
+          {socials && socials.length > 0 && <SocialLinks items={socials} />}
         </div>
         <div className="wrap footer-bottom">
           © 2026 Ceylon Journey Co. <span>|</span> Explore. Travel. Experience.

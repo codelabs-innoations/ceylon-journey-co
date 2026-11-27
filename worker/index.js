@@ -218,6 +218,19 @@ export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
 
+    if (pathname === "/api/socials" && request.method === "GET") {
+      const items = [
+        { id: "facebook", label: "Facebook", url: env.FACEBOOK_URL },
+        { id: "instagram", label: "Instagram", url: env.INSTAGRAM_URL },
+      ].filter((s) => s.url);
+      return new Response(JSON.stringify(items), {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=300",
+        },
+      });
+    }
+
     if (pathname === "/api/tours" && request.method === "GET") {
       try {
         return await handleTours(env);
